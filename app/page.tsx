@@ -32,6 +32,8 @@ export default function FlowBuilder() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [aslJson, setAslJson] = useState<string>('');
   const [showAsl, setShowAsl] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deployResult, setDeployResult] = useState<{ success: boolean; message: string; arn?: string } | null>(null);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -75,6 +77,55 @@ export default function FlowBuilder() {
     }
   }, [nodes, edges]);
 
+  const deployToAWS = useCallback(async () => {
+    const asl = convertToASL(nodes, edges);
+    if (!asl) {
+      alert('Cannot deploy: No nodes in the flow');
+      return;
+    }
+
+    const stateMachineName = prompt('Enter a name for your state machine:', `flow-builder-${Date.now()}`);
+    if (!stateMachineName) return;
+
+    setIsDeploying(true);
+    setDeployResult(null);
+
+    try {
+      const response = await fetch('/api/create-state-machine', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: stateMachineName,
+          definition: asl,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setDeployResult({
+          success: true,
+          message: result.message || 'State machine created successfully!',
+          arn: result.stateMachineArn,
+        });
+      } else {
+        setDeployResult({
+          success: false,
+          message: result.error || result.details || 'Failed to create state machine',
+        });
+      }
+    } catch (error) {
+      setDeployResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error occurred',
+      });
+    } finally {
+      setIsDeploying(false);
+    }
+  }, [nodes, edges]);
+
   return (
     <div className="h-screen w-screen relative">
       <ReactFlow
@@ -110,6 +161,13 @@ export default function FlowBuilder() {
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm mt-2"
             >
               Export to ASL
+            </button>
+            <button
+              onClick={deployToAWS}
+              disabled={isDeploying}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDeploying ? 'Deploying...' : 'Deploy to AWS'}
             </button>
           </div>
         </Panel>
@@ -147,6 +205,37 @@ export default function FlowBuilder() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {deployResult && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-xl font-bold ${deployResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                {deployResult.success ? '✓ Deployment Successful' : '✗ Deployment Failed'}
+              </h3>
+              <button
+                onClick={() => setDeployResult(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-gray-700 mb-4">{deployResult.message}</p>
+            {deployResult.arn && (
+              <div className="bg-gray-100 p-3 rounded mb-4">
+                <p className="text-xs text-gray-600 mb-1">State Machine ARN:</p>
+                <code className="text-xs text-gray-800 break-all">{deployResult.arn}</code>
+              </div>
+            )}
+            <button
+              onClick={() => setDeployResult(null)}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
