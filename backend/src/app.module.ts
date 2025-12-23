@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StateMachineModule } from './state-machine/state-machine.module';
 import { LoggerModule } from './common/logger/logger.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { LoggerModule } from './common/logger/logger.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    DatabaseModule,
     StateMachineModule,
     LoggerModule,
   ],
