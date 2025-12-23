@@ -274,6 +274,32 @@ npm run build
 npm run start
 ```
 
+## 🔐 IAM Permissions Setup
+
+Your Step Functions execution role needs permissions to access AWS services used in your workflows.
+
+### Quick Setup (Development)
+
+For development/testing, attach the `AdministratorAccess` policy to your role:
+1. Go to AWS IAM Console → Roles → `StepFunctionsExecutionRole`
+2. Add permissions → Attach policies → Select `AdministratorAccess`
+
+⚠️ **Warning:** This gives full access. Only use for development!
+
+### Recommended Setup (Production)
+
+See [IAM_PERMISSIONS_GUIDE.md](./IAM_PERMISSIONS_GUIDE.md) for:
+- Comprehensive policy covering common Step Functions integrations
+- Service-specific permissions (S3, Lambda, DynamoDB, etc.)
+- Best practices and troubleshooting
+
+**Common Services Used:**
+- **S3** - File storage (`s3:GetObject`, `s3:PutObject`)
+- **Lambda** - Serverless functions (`lambda:InvokeFunction`)
+- **DynamoDB** - NoSQL database (`dynamodb:PutItem`, `dynamodb:GetItem`)
+- **SQS/SNS** - Messaging and notifications
+- **Step Functions** - Nested workflows
+
 ## 🚢 Deployment
 
 ### Backend Deployment
