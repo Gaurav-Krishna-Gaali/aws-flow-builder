@@ -21,6 +21,8 @@ const nodeTypes: NodeTypes = {
   pass: PassStateNode,
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
 const initialNodes: Node[] = [];
 
 const initialEdges: Edge[] = [];
@@ -115,7 +117,7 @@ export default function FlowBuilder() {
     setDeployResult(null);
 
     try {
-      const response = await fetch('/api/create-state-machine', {
+      const response = await fetch(`${API_BASE_URL}/state-machines`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +158,7 @@ export default function FlowBuilder() {
     if (!stateMachineArn) return;
 
     try {
-      const response = await fetch(`/api/list-executions?stateMachineArn=${encodeURIComponent(stateMachineArn)}&maxResults=10`);
+      const response = await fetch(`${API_BASE_URL}/executions?stateMachineArn=${encodeURIComponent(stateMachineArn)}&maxResults=10`);
       const result = await response.json();
 
       if (response.ok) {
@@ -173,7 +175,7 @@ export default function FlowBuilder() {
 
     const poll = async () => {
       try {
-        const response = await fetch(`/api/get-execution?executionArn=${encodeURIComponent(executionArn)}`);
+        const response = await fetch(`${API_BASE_URL}/executions/${encodeURIComponent(executionArn)}`);
         const result = await response.json();
 
         if (response.ok) {
@@ -214,7 +216,7 @@ export default function FlowBuilder() {
     setCurrentExecution(null);
 
     try {
-      const response = await fetch('/api/start-execution', {
+      const response = await fetch(`${API_BASE_URL}/executions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +245,7 @@ export default function FlowBuilder() {
 
   const viewExecutionDetails = useCallback(async (executionArn: string) => {
     try {
-      const response = await fetch(`/api/get-execution?executionArn=${encodeURIComponent(executionArn)}`);
+      const response = await fetch(`${API_BASE_URL}/executions/${encodeURIComponent(executionArn)}`);
       const result = await response.json();
 
       if (response.ok) {
@@ -267,7 +269,7 @@ export default function FlowBuilder() {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/delete-state-machine?stateMachineArn=${encodeURIComponent(stateMachineArn)}`, {
+      const response = await fetch(`${API_BASE_URL}/state-machines?stateMachineArn=${encodeURIComponent(stateMachineArn)}`, {
         method: 'DELETE',
       });
 
