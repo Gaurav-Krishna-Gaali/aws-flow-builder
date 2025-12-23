@@ -16,7 +16,7 @@ import ReactFlow, {
   NodeTypes,
 } from 'reactflow';
 import PassStateNode from './components/PassStateNode';
-import { convertToASL } from './utils/aslConverter';
+import { convertToASL, convertFromASL, ASLDefinition } from './utils/aslConverter';
 
 const nodeTypes: NodeTypes = {
   pass: PassStateNode,
@@ -61,10 +61,20 @@ export default function FlowBuilder() {
   }>>([]);
   const [showExecutionDetails, setShowExecutionDetails] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importAslText, setImportAslText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importedASL, setImportedASL] = useState<ASLDefinition | null>(null);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+      // Clear imported ASL if user manually connects nodes (they're editing)
+      if (importedASL) {
+        setImportedASL(null);
+      }
+    },
+    [setEdges, importedASL]
   );
 
   const addPassState = useCallback(() => {
@@ -82,7 +92,11 @@ export default function FlowBuilder() {
     };
     setNodes((nds) => [...nds, newNode]);
     nodeId++;
-  }, [setNodes]);
+    // Clear imported ASL if user adds new nodes (they're editing)
+    if (importedASL) {
+      setImportedASL(null);
+    }
+  }, [setNodes, importedASL]);
 
   const deleteSelectedNodes = useCallback(() => {
     setNodes((nds) => nds.filter((node) => !node.selected));
@@ -95,17 +109,83 @@ export default function FlowBuilder() {
   }, [nodes, setNodes, setEdges]);
 
   const exportToASL = useCallback(() => {
-    const asl = convertToASL(nodes, edges);
+    // Use imported ASL if available, otherwise convert from nodes
+    const asl = importedASL || convertToASL(nodes, edges);
     if (asl) {
       setAslJson(JSON.stringify(asl, null, 2));
       setShowAsl(true);
     } else {
       alert('Cannot export: No nodes in the flow');
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, importedASL]);
+
+  const handleImportASL = useCallback(() => {
+    setShowImportModal(true);
+    setImportAslText('');
+  }, []);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setImportAslText(content);
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const confirmImportASL = useCallback(() => {
+    if (!importAslText.trim()) {
+      alert('Please paste or upload ASL JSON');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const aslJson = JSON.parse(importAslText) as ASLDefinition;
+      
+      // Validate ASL structure
+      if (!aslJson.States || !aslJson.StartAt) {
+        alert('Failed to import: Invalid ASL structure. Missing States or StartAt.');
+        setIsImporting(false);
+        return;
+      }
+
+      // Store the original ASL for deployment
+      setImportedASL(aslJson);
+      
+      // Convert to nodes/edges for visual representation
+      const result = convertFromASL(aslJson);
+      
+      if (result && result.nodes.length > 0) {
+        // Update nodes and edges
+        setNodes(result.nodes);
+        setEdges(result.edges);
+        
+        // Reset node counter to avoid conflicts
+        nodeId = result.nodes.length + 1;
+        
+        setShowImportModal(false);
+        setImportAslText('');
+        alert(`Successfully imported ${result.nodes.length} states! The original ASL structure is preserved for deployment.`);
+      } else {
+        alert('Failed to import: Could not convert ASL to visual representation');
+        setImportedASL(null);
+      }
+    } catch (error) {
+      console.error('Error importing ASL:', error);
+      alert('Failed to import: Invalid JSON format');
+      setImportedASL(null);
+    } finally {
+      setIsImporting(false);
+    }
+  }, [importAslText, setNodes, setEdges]);
 
   const deployToAWS = useCallback(async () => {
-    const asl = convertToASL(nodes, edges);
+    // Use imported ASL if available, otherwise convert from nodes
+    const asl = importedASL || convertToASL(nodes, edges);
     if (!asl) {
       alert('Cannot deploy: No nodes in the flow');
       return;
@@ -153,7 +233,7 @@ export default function FlowBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, importedASL]);
 
   const loadExecutionHistory = useCallback(async () => {
     if (!stateMachineArn) return;
@@ -357,8 +437,14 @@ export default function FlowBuilder() {
               Delete Selected
             </button>
             <button
+              onClick={handleImportASL}
+              className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-500 transition-colors text-sm mt-2 shadow-lg shadow-cyan-500/20"
+            >
+              Import ASL
+            </button>
+            <button
               onClick={exportToASL}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors text-sm mt-2 shadow-lg shadow-blue-500/20"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors text-sm shadow-lg shadow-blue-500/20"
             >
               Export to ASL
             </button>
@@ -683,6 +769,80 @@ export default function FlowBuilder() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Import ASL Modal */}
+      {showImportModal && (
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 p-6 max-w-2xl w-full max-h-[80vh] overflow-auto m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Import ASL JSON</h3>
+              <button
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportAslText('');
+                }}
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Upload JSON File:
+                </label>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleFileUpload}
+                  className="w-full px-3 py-2 bg-gray-900/50 border border-gray-700 rounded text-white text-sm cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"
+                />
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-800 text-gray-400">OR</span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Paste ASL JSON:
+                </label>
+                <textarea
+                  value={importAslText}
+                  onChange={(e) => setImportAslText(e.target.value)}
+                  className="w-full h-64 p-3 bg-gray-900/50 border border-gray-700 rounded font-mono text-sm text-white placeholder-gray-500 resize-none"
+                  placeholder='{\n  "Comment": "My workflow",\n  "StartAt": "State_1",\n  "States": {\n    "State_1": {\n      "Type": "Pass",\n      "Result": "Hello",\n      "End": true\n    }\n  }\n}'
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={confirmImportASL}
+                  disabled={isImporting || !importAslText.trim()}
+                  className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20"
+                >
+                  {isImporting ? 'Importing...' : 'Import'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportAslText('');
+                  }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
