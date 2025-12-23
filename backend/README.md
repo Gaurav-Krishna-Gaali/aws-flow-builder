@@ -31,6 +31,71 @@
 $ pnpm install
 ```
 
+### Database Setup (PostgreSQL)
+
+1. **Install PostgreSQL dependencies:**
+   ```bash
+   $ npm install @nestjs/typeorm typeorm pg
+   ```
+
+2. **Create a PostgreSQL database:**
+   ```sql
+   CREATE DATABASE flow_builder;
+   ```
+
+3. **Configure environment variables:**
+   Create a `.env` file in the `backend` directory with the following:
+   
+   **Option 1: Using a connection string (recommended for Neon, Railway, etc.):**
+   ```env
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+
+   # Frontend URL (for CORS)
+   # For production, set this to your production frontend URL
+   # For multiple origins, separate with commas: http://localhost:3000,https://yourdomain.com
+   FRONTEND_URL=http://localhost:3000
+
+   # PostgreSQL Database Connection String (e.g., Neon, Railway, etc.)
+   DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+
+   # AWS Configuration
+   AWS_REGION=us-east-1
+   AWS_ACCESS_KEY_ID=your_access_key_id
+   AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   AWS_STEP_FUNCTIONS_ROLE_ARN=arn:aws:iam::your-account-id:role/your-role-name
+   ```
+
+   **Option 2: Using individual parameters (for local PostgreSQL):**
+   ```env
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+
+   # Frontend URL (for CORS)
+   FRONTEND_URL=http://localhost:3000
+
+   # PostgreSQL Database Configuration (only if DATABASE_URL is not set)
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USERNAME=postgres
+   DB_PASSWORD=postgres
+   DB_NAME=flow_builder
+
+   # AWS Configuration
+   AWS_REGION=us-east-1
+   AWS_ACCESS_KEY_ID=your_access_key_id
+   AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   AWS_STEP_FUNCTIONS_ROLE_ARN=arn:aws:iam::your-account-id:role/your-role-name
+   ```
+   
+   **Note:** If `DATABASE_URL` is set, it will be used. Otherwise, individual parameters will be used.
+
+4. **Database Schema:**
+   The database schema will be automatically synchronized in development mode (`NODE_ENV !== 'production'`). 
+   In production, use migrations instead of `synchronize: true`.
+
 ## Compile and run the project
 
 ```bash
@@ -89,7 +154,6 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
 

@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   SFNClient,
   CreateStateMachineCommand,
@@ -24,10 +25,10 @@ type StartExecutionDto = {
 export class StateMachineService {
   private readonly sfnClient: SFNClient;
 
-  constructor() {
-    const region = process.env.AWS_REGION || 'us-east-1';
-    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+  constructor(private readonly configService: ConfigService) {
+    const region = this.configService.get<string>('AWS_REGION') || 'us-east-1';
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
 
     this.sfnClient = new SFNClient({
       region,
@@ -47,7 +48,7 @@ export class StateMachineService {
       throw new BadRequestException('Missing required fields: name and definition');
     }
 
-    const executionRoleArn = roleArn || process.env.AWS_STEP_FUNCTIONS_ROLE_ARN;
+    const executionRoleArn = roleArn || this.configService.get<string>('AWS_STEP_FUNCTIONS_ROLE_ARN');
     if (!executionRoleArn) {
       throw new BadRequestException(
         'Missing IAM Role ARN. Provide AWS_STEP_FUNCTIONS_ROLE_ARN or pass roleArn in request body.',
