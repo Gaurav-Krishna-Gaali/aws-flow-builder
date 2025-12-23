@@ -357,7 +357,7 @@ export default function Dashboard() {
       case 'DELETING':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-white/10 text-white/60 border-white/20';
     }
   };
 
@@ -372,9 +372,9 @@ export default function Dashboard() {
       case 'TIMED_OUT':
         return 'bg-yellow-500/20 text-yellow-400';
       case 'ABORTED':
-        return 'bg-gray-500/20 text-gray-400';
+        return 'bg-white/10 text-white/60';
       default:
-        return 'bg-gray-500/20 text-gray-400';
+        return 'bg-white/10 text-white/60';
     }
   };
 
@@ -391,18 +391,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+      <header className="bg-black border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              <Link href="/" className="text-xl font-bold text-white">
                 FlowBuilder
               </Link>
-              <span className="text-sm text-gray-400">Dashboard</span>
+              <span className="text-sm text-white/60">Dashboard</span>
             </div>
-            <Button asChild>
+            <Button asChild variant="default">
               <Link href="/">
                 + New Workflow
               </Link>
@@ -412,66 +412,66 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:border-slate-600 transition-colors">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-white/5 border-white/10 hover:border-white/20 transition-colors">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Workflows</p>
-                  <p className="text-3xl font-bold mt-2">{workflows.length}</p>
+                  <p className="text-xs font-medium text-white/60">Total Workflows</p>
+                  <p className="text-2xl font-bold text-white mt-1">{workflows.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                  <FileText className="w-6 h-6 text-blue-400" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <FileText className="w-5 h-5 text-blue-400" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-slate-600 transition-colors">
-            <CardContent className="p-6">
+          <Card className="bg-white/5 border-white/10 hover:border-white/20 transition-colors">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active</p>
-                  <p className="text-3xl font-bold text-green-400 mt-2">
+                  <p className="text-xs font-medium text-white/60">Active</p>
+                  <p className="text-2xl font-bold text-green-400 mt-1">
                     {workflows.filter((w) => w.status === 'ACTIVE').length}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center border border-green-500/30">
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
+                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center border border-green-500/30">
+                  <CheckCircle2 className="w-5 h-5 text-green-400" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-slate-600 transition-colors">
-            <CardContent className="p-6">
+          <Card className="bg-white/5 border-white/10 hover:border-white/20 transition-colors">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Running Executions</p>
-                  <p className="text-3xl font-bold text-blue-400 mt-2">
+                  <p className="text-xs font-medium text-white/60">Running Executions</p>
+                  <p className="text-2xl font-bold text-blue-400 mt-1">
                     {Object.values(workflowExecutions).flat().filter((e) => e.status === 'RUNNING').length}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                  <Play className="w-6 h-6 text-blue-400" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <Play className="w-5 h-5 text-blue-400" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:border-slate-600 transition-colors">
-            <CardContent className="p-6">
+          <Card className="bg-white/5 border-white/10 hover:border-white/20 transition-colors">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Executions</p>
-                  <p className="text-3xl font-bold mt-2">
+                  <p className="text-xs font-medium text-white/60">Total Executions</p>
+                  <p className="text-2xl font-bold text-purple-400 mt-1">
                     {Object.values(workflowExecutions).flat().length}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
-                  <BarChart3 className="w-6 h-6 text-purple-400" />
+                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
+                  <BarChart3 className="w-5 h-5 text-purple-400" />
                 </div>
               </div>
             </CardContent>
@@ -479,51 +479,50 @@ export default function Dashboard() {
         </div>
 
         {/* Filters and Actions */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex-1 flex flex-col sm:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Search workflows..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between w-full">
+            <div className="flex-1 flex flex-col sm:flex-row gap-3 w-full">
+              {/* Search */}
+              <div className="flex-1 relative w-full">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-white/40" />
                 </div>
-
-                {/* Status Filter */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="DELETING">Deleting</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  type="text"
+                  placeholder="Search workflows..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-white/30 w-full"
+                />
               </div>
 
-              {/* Bulk Actions */}
-              {selectedWorkflows.size > 0 && (
-                <Button
-                  onClick={handleBulkDelete}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete ({selectedWorkflows.size})
-                </Button>
-              )}
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px] bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border-white/10">
+                  <SelectItem value="all" className="text-white">All Status</SelectItem>
+                  <SelectItem value="ACTIVE" className="text-white">Active</SelectItem>
+                  <SelectItem value="DELETING" className="text-white">Deleting</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Bulk Actions */}
+            {selectedWorkflows.size > 0 && (
+              <Button
+                onClick={handleBulkDelete}
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete ({selectedWorkflows.size})
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Workflows List */}
         {isLoading ? (
@@ -531,11 +530,11 @@ export default function Dashboard() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400"></div>
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <Card className="p-12 text-center">
+          <Card className="bg-white/5 border-white/10 p-12 text-center">
             <CardContent>
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-medium">No workflows found</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <FileText className="mx-auto h-12 w-12 text-white/40" />
+              <h3 className="mt-4 text-lg font-medium text-white">No workflows found</h3>
+              <p className="mt-2 text-sm text-white/60">
                 {searchQuery || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Get started by creating a new workflow'}
               </p>
               {!searchQuery && statusFilter === 'all' && (
@@ -546,10 +545,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredWorkflows.map((workflow) => (
-              <Card key={workflow.stateMachineArn} className="hover:border-slate-600 transition-colors">
-                <CardContent className="p-6">
+              <Card key={workflow.stateMachineArn} className="bg-white/5 border-white/10 hover:border-white/20 transition-colors">
+                <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
                       {/* Checkbox */}
@@ -562,19 +561,19 @@ export default function Dashboard() {
 
                       {/* Workflow Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="text-lg font-semibold">{workflow.name}</h3>
-                          <Badge variant={workflow.status === 'ACTIVE' ? 'default' : 'secondary'} className={getStatusColor(workflow.status)}>
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <h3 className="text-base font-semibold text-white">{workflow.name}</h3>
+                          <Badge variant={workflow.status === 'ACTIVE' ? 'default' : 'secondary'} className={`${getStatusColor(workflow.status)} text-xs`}>
                             {workflow.status || 'UNKNOWN'}
                           </Badge>
                           {workflow.type && (
-                            <Badge variant="outline" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                            <Badge variant="outline" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-xs">
                               {workflow.type}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground font-mono truncate">{workflow.stateMachineArn}</p>
-                        <p className="text-sm text-muted-foreground/70 mt-1">Created {formatDate(workflow.creationDate)}</p>
+                        <p className="text-xs text-white/50 font-mono truncate">{workflow.stateMachineArn}</p>
+                        <p className="text-xs text-white/40 mt-0.5">Created {formatDate(workflow.creationDate)}</p>
                       </div>
                     </div>
 
@@ -617,48 +616,49 @@ export default function Dashboard() {
 
                   {/* Executions Panel */}
                   {expandedWorkflow === workflow.stateMachineArn && (
-                    <div className="mt-6 pt-6">
-                      <Separator className="mb-4" />
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-sm font-semibold">Recent Executions</h4>
+                    <div className="mt-4 pt-4">
+                      <Separator className="mb-3 bg-white/10" />
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold text-white/80">Recent Executions</h4>
                         {isLoadingExecutions[workflow.stateMachineArn] && (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white/60"></div>
                         )}
                       </div>
                       {workflowExecutions[workflow.stateMachineArn]?.length > 0 ? (
                         <div className="space-y-2">
                           {workflowExecutions[workflow.stateMachineArn].map((execution) => (
-                            <Card key={execution.executionArn} className="hover:bg-accent/50 transition-colors">
-                              <CardContent className="p-3">
+                            <Card key={execution.executionArn} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+                              <CardContent className="p-2.5">
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <Badge className={getExecutionStatusColor(execution.status)}>
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <Badge className={`${getExecutionStatusColor(execution.status)} text-xs`}>
                                       {execution.status}
                                     </Badge>
-                                    <span className="text-sm font-mono truncate">
+                                    <span className="text-xs font-mono truncate text-white/80">
                                       {execution.name || execution.executionArn.split(':').pop()}
                                     </span>
-                                    <span className="text-xs text-muted-foreground ml-auto">
+                                    <span className="text-xs text-white/40 ml-auto">
                                       {formatDate(execution.startDate)}
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2 ml-4">
+                                  <div className="flex items-center gap-1.5 ml-3">
                                     {execution.status === 'RUNNING' && (
                                       <Button
                                         onClick={() => handleStopExecution(execution.executionArn, workflow.stateMachineArn)}
                                         disabled={isStoppingExecution === execution.executionArn}
                                         variant="destructive"
                                         size="sm"
+                                        className="h-7 text-xs px-2"
                                         title="Stop Execution"
                                       >
                                         {isStoppingExecution === execution.executionArn ? (
                                           <>
-                                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                            <div className="animate-spin rounded-full h-2.5 w-2.5 border-b-2 border-white mr-1"></div>
                                             Stopping...
                                           </>
                                         ) : (
                                           <>
-                                            <X className="w-4 h-4 mr-1" />
+                                            <X className="w-3 h-3 mr-1" />
                                             Stop
                                           </>
                                         )}
@@ -668,6 +668,7 @@ export default function Dashboard() {
                                       onClick={() => viewExecutionDetails(execution.executionArn)}
                                       variant="outline"
                                       size="sm"
+                                      className="h-7 text-xs px-2 border-white/20 text-white/80 hover:bg-white/10"
                                     >
                                       View Details
                                     </Button>
@@ -678,7 +679,7 @@ export default function Dashboard() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground text-center py-4">No executions yet</p>
+                        <p className="text-xs text-white/40 text-center py-3">No executions yet</p>
                       )}
                     </div>
                   )}
