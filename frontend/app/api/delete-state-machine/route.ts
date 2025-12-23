@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
+import { SFNClient, DeleteStateMachineCommand } from '@aws-sdk/client-sfn';
 
 const sfnClient = new SFNClient({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -11,42 +11,39 @@ const sfnClient = new SFNClient({
     : undefined,
 });
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { stateMachineArn, input, name } = body;
+    const { searchParams } = new URL(request.url);
+    const stateMachineArn = searchParams.get('stateMachineArn');
 
     if (!stateMachineArn) {
       return NextResponse.json(
-        { error: 'Missing required field: stateMachineArn' },
+        { error: 'Missing required parameter: stateMachineArn' },
         { status: 400 }
       );
     }
 
-    const command = new StartExecutionCommand({
+    const command = new DeleteStateMachineCommand({
       stateMachineArn: stateMachineArn,
-      input: input ? JSON.stringify(input) : '{}',
-      name: name, // Optional execution name
     });
 
-    const response = await sfnClient.send(command);
+    await sfnClient.send(command);
 
     return NextResponse.json({
       success: true,
-      executionArn: response.executionArn,
-      startDate: response.startDate,
-      message: 'Execution started successfully!',
+      message: 'State machine deleted successfully!',
     });
   } catch (error) {
-    console.error('Error starting execution:', error);
+    console.error('Error deleting state machine:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
-        error: 'Failed to start execution',
+        error: 'Failed to delete state machine',
         details: errorMessage,
       },
       { status: 500 }
     );
   }
 }
+
 

@@ -57,6 +57,7 @@ export default function FlowBuilder() {
     startDate: Date;
   }>>([]);
   const [showExecutionDetails, setShowExecutionDetails] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -254,6 +255,49 @@ export default function FlowBuilder() {
     }
   }, []);
 
+  const deleteWorkflow = useCallback(async () => {
+    if (!stateMachineArn) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this workflow? This action cannot be undone and will delete the state machine from AWS.'
+    );
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/delete-state-machine?stateMachineArn=${encodeURIComponent(stateMachineArn)}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Clear all state related to the deleted workflow
+        setStateMachineArn(null);
+        setExecutionHistory([]);
+        setCurrentExecution(null);
+        setDeployResult({
+          success: true,
+          message: result.message || 'Workflow deleted successfully!',
+        });
+      } else {
+        setDeployResult({
+          success: false,
+          message: result.error || result.details || 'Failed to delete workflow',
+        });
+      }
+    } catch (error) {
+      setDeployResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error occurred',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [stateMachineArn]);
+
   // Load execution history when state machine is deployed
   useEffect(() => {
     if (stateMachineArn) {
@@ -327,9 +371,16 @@ export default function FlowBuilder() {
           {stateMachineArn && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <p className="text-xs text-gray-600 mb-2">Deployed State Machine:</p>
-              <code className="text-xs text-gray-800 break-all bg-gray-100 p-2 rounded block">
+              <code className="text-xs text-gray-800 break-all bg-gray-100 p-2 rounded block mb-2">
                 {stateMachineArn.split('/').pop()}
               </code>
+              <button
+                onClick={deleteWorkflow}
+                disabled={isDeleting}
+                className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Workflow'}
+              </button>
             </div>
           )}
         </Panel>

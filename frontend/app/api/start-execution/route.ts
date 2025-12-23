@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SFNClient, ListExecutionsCommand } from '@aws-sdk/client-sfn';
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 
 const sfnClient = new SFNClient({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -11,40 +11,43 @@ const sfnClient = new SFNClient({
     : undefined,
 });
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const stateMachineArn = searchParams.get('stateMachineArn');
-    const maxResults = parseInt(searchParams.get('maxResults') || '10');
+    const body = await request.json();
+    const { stateMachineArn, input, name } = body;
 
     if (!stateMachineArn) {
       return NextResponse.json(
-        { error: 'Missing required parameter: stateMachineArn' },
+        { error: 'Missing required field: stateMachineArn' },
         { status: 400 }
       );
     }
 
-    const command = new ListExecutionsCommand({
+    const command = new StartExecutionCommand({
       stateMachineArn: stateMachineArn,
-      maxResults: maxResults,
+      input: input ? JSON.stringify(input) : '{}',
+      name: name, // Optional execution name
     });
 
     const response = await sfnClient.send(command);
 
     return NextResponse.json({
       success: true,
-      executions: response.executions || [],
+      executionArn: response.executionArn,
+      startDate: response.startDate,
+      message: 'Execution started successfully!',
     });
   } catch (error) {
-    console.error('Error listing executions:', error);
+    console.error('Error starting execution:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
-        error: 'Failed to list executions',
+        error: 'Failed to start execution',
         details: errorMessage,
       },
       { status: 500 }
     );
   }
 }
+
 
