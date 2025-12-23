@@ -1,7 +1,39 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Play, 
+  Download, 
+  Trash2, 
+  ChevronDown, 
+  Search, 
+  X,
+  CheckCircle2,
+  BarChart3,
+  FileText
+} from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
@@ -370,12 +402,11 @@ export default function Dashboard() {
               </Link>
               <span className="text-sm text-gray-400">Dashboard</span>
             </div>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium"
-            >
-              + New Workflow
-            </Link>
+            <Button asChild>
+              <Link href="/">
+                + New Workflow
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -384,118 +415,115 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">Total Workflows</p>
-                <p className="text-3xl font-bold text-white mt-2">{workflows.length}</p>
+          <Card className="hover:border-slate-600 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Workflows</p>
+                  <p className="text-3xl font-bold mt-2">{workflows.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <FileText className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">Active</p>
-                <p className="text-3xl font-bold text-green-400 mt-2">
-                  {workflows.filter((w) => w.status === 'ACTIVE').length}
-                </p>
+          <Card className="hover:border-slate-600 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Active</p>
+                  <p className="text-3xl font-bold text-green-400 mt-2">
+                    {workflows.filter((w) => w.status === 'ACTIVE').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center border border-green-500/30">
+                  <CheckCircle2 className="w-6 h-6 text-green-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center border border-green-500/30">
-                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">Running Executions</p>
-                <p className="text-3xl font-bold text-blue-400 mt-2">
-                  {Object.values(workflowExecutions).flat().filter((e) => e.status === 'RUNNING').length}
-                </p>
+          <Card className="hover:border-slate-600 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Running Executions</p>
+                  <p className="text-3xl font-bold text-blue-400 mt-2">
+                    {Object.values(workflowExecutions).flat().filter((e) => e.status === 'RUNNING').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <Play className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:border-slate-600 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">Total Executions</p>
-                <p className="text-3xl font-bold text-white mt-2">
-                  {Object.values(workflowExecutions).flat().length}
-                </p>
+          <Card className="hover:border-slate-600 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Executions</p>
+                  <p className="text-3xl font-bold mt-2">
+                    {Object.values(workflowExecutions).flat().length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
+                  <BarChart3 className="w-6 h-6 text-purple-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
-                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters and Actions */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex-1 flex flex-col sm:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Search workflows..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search workflows..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
+
+                {/* Status Filter */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="DELETING">Deleting</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-              >
-                <option value="all" className="bg-slate-800">All Status</option>
-                <option value="ACTIVE" className="bg-slate-800">Active</option>
-                <option value="DELETING" className="bg-slate-800">Deleting</option>
-              </select>
-            </div>
-
-            {/* Bulk Actions */}
-            {selectedWorkflows.size > 0 && (
-              <div className="flex gap-2">
-                <button
+              {/* Bulk Actions */}
+              {selectedWorkflows.size > 0 && (
+                <Button
                   onClick={handleBulkDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors font-medium flex items-center gap-2"
+                  variant="destructive"
+                  className="flex items-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 className="w-4 h-4" />
                   Delete ({selectedWorkflows.size})
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Workflows List */}
         {isLoading ? (
@@ -503,31 +531,25 @@ export default function Dashboard() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400"></div>
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-white">No workflows found</h3>
-            <p className="mt-2 text-sm text-gray-400">
-              {searchQuery || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Get started by creating a new workflow'}
-            </p>
-            {!searchQuery && statusFilter === 'all' && (
-              <Link
-                href="/"
-                className="mt-6 inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium"
-              >
-                Create Workflow
-              </Link>
-            )}
-          </div>
+          <Card className="p-12 text-center">
+            <CardContent>
+              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-medium">No workflows found</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {searchQuery || statusFilter !== 'all' ? 'Try adjusting your filters' : 'Get started by creating a new workflow'}
+              </p>
+              {!searchQuery && statusFilter === 'all' && (
+                <Button asChild className="mt-6">
+                  <Link href="/">Create Workflow</Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-4">
             {filteredWorkflows.map((workflow) => (
-              <div
-                key={workflow.stateMachineArn}
-                className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-600 transition-colors"
-              >
-                <div className="p-6">
+              <Card key={workflow.stateMachineArn} className="hover:border-slate-600 transition-colors">
+                <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
                       {/* Checkbox */}
@@ -540,371 +562,362 @@ export default function Dashboard() {
 
                       {/* Workflow Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-white">{workflow.name}</h3>
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(workflow.status)}`}>
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="text-lg font-semibold">{workflow.name}</h3>
+                          <Badge variant={workflow.status === 'ACTIVE' ? 'default' : 'secondary'} className={getStatusColor(workflow.status)}>
                             {workflow.status || 'UNKNOWN'}
-                          </span>
+                          </Badge>
                           {workflow.type && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            <Badge variant="outline" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
                               {workflow.type}
-                            </span>
+                            </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-400 font-mono truncate">{workflow.stateMachineArn}</p>
-                        <p className="text-sm text-gray-500 mt-1">Created {formatDate(workflow.creationDate)}</p>
+                        <p className="text-sm text-muted-foreground font-mono truncate">{workflow.stateMachineArn}</p>
+                        <p className="text-sm text-muted-foreground/70 mt-1">Created {formatDate(workflow.creationDate)}</p>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-4">
-                      <button
+                      <Button
                         onClick={() => handleStartExecution(workflow)}
-                        className="p-2 text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors"
+                        variant="ghost"
+                        size="icon"
                         title="Start Execution"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                      <button
+                        <Play className="w-5 h-5" />
+                      </Button>
+                      <Button
                         onClick={() => handleExport(workflow)}
-                        className="p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/20 rounded-lg transition-colors"
+                        variant="ghost"
+                        size="icon"
                         title="Export"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </button>
-                      <button
+                        <Download className="w-5 h-5" />
+                      </Button>
+                      <Button
                         onClick={() => handleDeleteClick(workflow.stateMachineArn)}
-                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                        variant="ghost"
+                        size="icon"
                         title="Delete"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                      <button
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                      <Button
                         onClick={() => toggleWorkflowExpansion(workflow.stateMachineArn)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                        variant="ghost"
+                        size="icon"
                         title="View Executions"
                       >
-                        <svg
-                          className={`w-5 h-5 transition-transform ${expandedWorkflow === workflow.stateMachineArn ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                        <ChevronDown className={`w-5 h-5 transition-transform ${expandedWorkflow === workflow.stateMachineArn ? 'rotate-180' : ''}`} />
+                      </Button>
                     </div>
                   </div>
 
                   {/* Executions Panel */}
                   {expandedWorkflow === workflow.stateMachineArn && (
-                    <div className="mt-6 pt-6 border-t border-slate-700">
+                    <div className="mt-6 pt-6">
+                      <Separator className="mb-4" />
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-sm font-semibold text-white">Recent Executions</h4>
+                        <h4 className="text-sm font-semibold">Recent Executions</h4>
                         {isLoadingExecutions[workflow.stateMachineArn] && (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-400"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                         )}
                       </div>
                       {workflowExecutions[workflow.stateMachineArn]?.length > 0 ? (
                         <div className="space-y-2">
                           {workflowExecutions[workflow.stateMachineArn].map((execution) => (
-                            <div
-                              key={execution.executionArn}
-                              className="flex items-center justify-between p-3 bg-slate-900 rounded-lg hover:bg-slate-900/80 transition-colors border border-slate-700"
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${getExecutionStatusColor(execution.status)}`}>
-                                  {execution.status}
-                                </span>
-                                <span className="text-sm text-gray-300 font-mono truncate">
-                                  {execution.name || execution.executionArn.split(':').pop()}
-                                </span>
-                                <span className="text-xs text-gray-500 ml-auto">
-                                  {formatDate(execution.startDate)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 ml-4">
-                                {execution.status === 'RUNNING' && (
-                                  <button
-                                    onClick={() => handleStopExecution(execution.executionArn, workflow.stateMachineArn)}
-                                    disabled={isStoppingExecution === execution.executionArn}
-                                    className="px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                    title="Stop Execution"
-                                  >
-                                    {isStoppingExecution === execution.executionArn ? (
-                                      <>
-                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-400"></div>
-                                        Stopping...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                                        </svg>
-                                        Stop
-                                      </>
+                            <Card key={execution.executionArn} className="hover:bg-accent/50 transition-colors">
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <Badge className={getExecutionStatusColor(execution.status)}>
+                                      {execution.status}
+                                    </Badge>
+                                    <span className="text-sm font-mono truncate">
+                                      {execution.name || execution.executionArn.split(':').pop()}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground ml-auto">
+                                      {formatDate(execution.startDate)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-4">
+                                    {execution.status === 'RUNNING' && (
+                                      <Button
+                                        onClick={() => handleStopExecution(execution.executionArn, workflow.stateMachineArn)}
+                                        disabled={isStoppingExecution === execution.executionArn}
+                                        variant="destructive"
+                                        size="sm"
+                                        title="Stop Execution"
+                                      >
+                                        {isStoppingExecution === execution.executionArn ? (
+                                          <>
+                                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                            Stopping...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <X className="w-4 h-4 mr-1" />
+                                            Stop
+                                          </>
+                                        )}
+                                      </Button>
                                     )}
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => viewExecutionDetails(execution.executionArn)}
-                                  className="px-3 py-1 text-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded transition-colors"
-                                >
-                                  View Details
-                                </button>
-                              </div>
-                            </div>
+                                    <Button
+                                      onClick={() => viewExecutionDetails(execution.executionArn)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      View Details
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-500 text-center py-4">No executions yet</p>
+                        <p className="text-sm text-muted-foreground text-center py-4">No executions yet</p>
                       )}
                     </div>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
       </main>
 
       {/* Delete Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">Delete Workflow{selectedWorkflows.size > 1 ? 's' : ''}?</h3>
-            <p className="text-sm text-gray-400 mb-6">
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Workflow{selectedWorkflows.size > 1 ? 's' : ''}?</DialogTitle>
+            <DialogDescription>
               {selectedWorkflows.size > 1
                 ? `Are you sure you want to delete ${selectedWorkflows.size} workflows? This action cannot be undone.`
                 : 'Are you sure you want to delete this workflow? This action cannot be undone.'}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setWorkflowToDelete(null);
-                }}
-                className="px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setWorkflowToDelete(null);
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Start Execution Modal */}
-      {showExecutionModal && selectedWorkflowForExecution && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-2xl w-full p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">Start Execution</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Workflow: <span className="font-mono text-xs text-indigo-400">{selectedWorkflowForExecution.name}</span>
-            </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Input (JSON)</label>
-              <textarea
-                value={executionInput}
-                onChange={(e) => setExecutionInput(e.target.value)}
-                className="w-full h-32 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm text-white placeholder-gray-500 transition-colors"
-                placeholder='{"key": "value"}'
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowExecutionModal(false);
-                  setSelectedWorkflowForExecution(null);
-                }}
-                className="px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                disabled={isStartingExecution}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmStartExecution}
-                disabled={isStartingExecution}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isStartingExecution ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Starting...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Start Execution
-                  </>
-                )}
-              </button>
-            </div>
+      <Dialog open={showExecutionModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowExecutionModal(false);
+          setSelectedWorkflowForExecution(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Start Execution</DialogTitle>
+            <DialogDescription>
+              Workflow: <span className="font-mono text-xs">{selectedWorkflowForExecution?.name}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Input (JSON)</label>
+            <Textarea
+              value={executionInput}
+              onChange={(e) => setExecutionInput(e.target.value)}
+              className="h-32 font-mono"
+              placeholder='{"key": "value"}'
+            />
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowExecutionModal(false);
+                setSelectedWorkflowForExecution(null);
+              }}
+              disabled={isStartingExecution}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmStartExecution}
+              disabled={isStartingExecution}
+            >
+              {isStartingExecution ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Starting...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Execution
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Execution Details Modal */}
-      {showExecutionDetails && selectedExecution && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Execution Details</h3>
-              <button
-                onClick={() => {
-                  setShowExecutionDetails(false);
-                  setSelectedExecution(null);
-                }}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Status</label>
-                  <div className="mt-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getExecutionStatusColor(selectedExecution.status)}`}>
-                      {selectedExecution.status}
-                    </span>
-                  </div>
+      <Dialog open={showExecutionDetails} onOpenChange={(open) => {
+        if (!open) {
+          setShowExecutionDetails(false);
+          setSelectedExecution(null);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Execution Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Status</label>
+                <div className="mt-1">
+                  <Badge className={selectedExecution ? getExecutionStatusColor(selectedExecution.status) : ''}>
+                    {selectedExecution?.status || 'N/A'}
+                  </Badge>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Execution ARN</label>
-                  <p className="mt-1 text-sm font-mono text-gray-300 break-all">{selectedExecution.executionArn}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Start Date</label>
-                  <p className="mt-1 text-sm text-white">{formatDate(selectedExecution.startDate)}</p>
-                </div>
-                {selectedExecution.stopDate && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Stop Date</label>
-                    <p className="mt-1 text-sm text-white">{formatDate(selectedExecution.stopDate)}</p>
-                  </div>
-                )}
               </div>
-              {selectedExecution.input && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Execution ARN</label>
+                <p className="mt-1 text-sm font-mono break-all">{selectedExecution?.executionArn || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Start Date</label>
+                <p className="mt-1 text-sm">{selectedExecution?.startDate ? formatDate(selectedExecution.startDate) : 'N/A'}</p>
+              </div>
+              {selectedExecution?.stopDate && (
                 <div>
-                  <label className="text-sm font-medium text-gray-400 mb-2 block">Input</label>
-                  <pre className="bg-slate-900 border border-slate-700 p-4 rounded-lg overflow-x-auto text-xs font-mono text-gray-300">
-                    {JSON.stringify(selectedExecution.input, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {selectedExecution.output && (
-                <div>
-                  <label className="text-sm font-medium text-gray-400 mb-2 block">Output</label>
-                  <pre className="bg-slate-900 border border-slate-700 p-4 rounded-lg overflow-x-auto text-xs font-mono text-gray-300">
-                    {JSON.stringify(selectedExecution.output, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {selectedExecution.error && (
-                <div>
-                  <label className="text-sm font-medium text-red-400 mb-2 block">Error</label>
-                  <pre className="bg-red-500/10 border border-red-500/30 p-4 rounded-lg overflow-x-auto text-xs font-mono text-red-400">
-                    {selectedExecution.error}
-                  </pre>
-                </div>
-              )}
-              {selectedExecution.cause && (
-                <div>
-                  <label className="text-sm font-medium text-red-400 mb-2 block">Cause</label>
-                  <pre className="bg-red-500/10 border border-red-500/30 p-4 rounded-lg overflow-x-auto text-xs font-mono text-red-400">
-                    {selectedExecution.cause}
-                  </pre>
+                  <label className="text-sm font-medium text-muted-foreground">Stop Date</label>
+                  <p className="mt-1 text-sm">{formatDate(selectedExecution.stopDate)}</p>
                 </div>
               )}
             </div>
+            {selectedExecution?.input !== undefined && selectedExecution?.input !== null && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Input</label>
+                <pre className="bg-muted border p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                  {String(typeof selectedExecution.input === 'string' 
+                    ? selectedExecution.input 
+                    : JSON.stringify(selectedExecution.input, null, 2))}
+                </pre>
+              </div>
+            )}
+            {selectedExecution?.output !== undefined && selectedExecution?.output !== null && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Output</label>
+                <pre className="bg-muted border p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                  {String(typeof selectedExecution.output === 'string' 
+                    ? selectedExecution.output 
+                    : JSON.stringify(selectedExecution.output, null, 2))}
+                </pre>
+              </div>
+            )}
+            {selectedExecution?.error && (
+              <div>
+                <label className="text-sm font-medium text-destructive mb-2 block">Error</label>
+                <pre className="bg-destructive/10 border border-destructive/30 p-4 rounded-lg overflow-x-auto text-xs font-mono text-destructive">
+                  {String(selectedExecution.error)}
+                </pre>
+              </div>
+            )}
+            {selectedExecution?.cause && (
+              <div>
+                <label className="text-sm font-medium text-destructive mb-2 block">Cause</label>
+                <pre className="bg-destructive/10 border border-destructive/30 p-4 rounded-lg overflow-x-auto text-xs font-mono text-destructive">
+                  {String(selectedExecution.cause)}
+                </pre>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Export Modal */}
-      {showExportModal && workflowToExport && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">Export Workflow</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Export <span className="font-mono text-xs text-indigo-400">{workflowToExport.name}</span> in your preferred format.
-            </p>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Format</label>
-              <div className="flex gap-4">
-                <label className="flex items-center text-white">
-                  <input
-                    type="radio"
-                    value="json"
-                    checked={exportFormat === 'json'}
-                    onChange={(e) => setExportFormat(e.target.value as 'json' | 'yaml')}
-                    className="mr-2 text-indigo-600"
-                  />
-                  JSON
-                </label>
-                <label className="flex items-center text-white">
-                  <input
-                    type="radio"
-                    value="yaml"
-                    checked={exportFormat === 'yaml'}
-                    onChange={(e) => setExportFormat(e.target.value as 'json' | 'yaml')}
-                    className="mr-2 text-indigo-600"
-                  />
-                  YAML
-                </label>
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowExportModal(false);
-                  setWorkflowToExport(null);
-                }}
-                className="px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmExport}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export
-              </button>
+      <Dialog open={showExportModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowExportModal(false);
+          setWorkflowToExport(null);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Workflow</DialogTitle>
+            <DialogDescription>
+              Export <span className="font-mono text-xs">{workflowToExport?.name}</span> in your preferred format.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Format</label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="json"
+                  checked={exportFormat === 'json'}
+                  onChange={(e) => setExportFormat(e.target.value as 'json' | 'yaml')}
+                  className="mr-2"
+                />
+                JSON
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="yaml"
+                  checked={exportFormat === 'yaml'}
+                  onChange={(e) => setExportFormat(e.target.value as 'json' | 'yaml')}
+                  className="mr-2"
+                />
+                YAML
+              </label>
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowExportModal(false);
+                setWorkflowToExport(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={confirmExport}>
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
