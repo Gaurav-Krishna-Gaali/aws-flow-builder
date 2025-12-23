@@ -44,6 +44,9 @@ export class Execution {
   @Column({ type: 'timestamp', name: 'aws_stop_date', nullable: true })
   awsStopDate: Date | null;
 
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'trace_header' })
+  traceHeader: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -92,9 +92,51 @@ $ pnpm install
    
    **Note:** If `DATABASE_URL` is set, it will be used. Otherwise, individual parameters will be used.
 
-4. **Database Schema:**
-   The database schema will be automatically synchronized in development mode (`NODE_ENV !== 'production'`). 
-   In production, use migrations instead of `synchronize: true`.
+4. **Database Schema & Migrations:**
+   
+   **⚠️ Important:** The database uses migrations (not auto-sync) for both dev and production.
+   
+   **Quick Setup (using script):**
+   ```bash
+   # Linux/Mac
+   chmod +x scripts/setup-db.sh
+   ./scripts/setup-db.sh
+   
+   # Windows PowerShell
+   .\scripts\setup-db.ps1
+   ```
+   
+   **Manual Setup:**
+   ```bash
+   # Install dependencies
+   npm install
+   
+   # Build the project
+   npm run build
+   
+   # Run migrations
+   npm run migration:run
+   ```
+   
+   **Migration Commands:**
+   ```bash
+   # Run all pending migrations
+   npm run migration:run
+   
+   # Show migration status
+   npm run migration:show
+   
+   # Revert last migration (use with caution!)
+   npm run migration:revert
+   
+   # Generate new migration from entity changes
+   npm run migration:generate src/database/migrations/MigrationName
+   
+   # Create empty migration file
+   npm run migration:create src/database/migrations/MigrationName
+   ```
+   
+   For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
 ## Compile and run the project
 

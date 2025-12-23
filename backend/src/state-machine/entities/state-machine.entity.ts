@@ -28,8 +28,20 @@ export class StateMachine {
   @Column({ type: 'varchar', length: 50, default: 'STANDARD' })
   type: string;
 
+  @Column({ type: 'varchar', length: 20, default: 'ACTIVE' })
+  status: string;
+
   @Column({ type: 'timestamp', nullable: true, name: 'aws_creation_date' })
   awsCreationDate: Date | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'logging_configuration' })
+  loggingConfiguration: Record<string, unknown> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'tracing_configuration' })
+  tracingConfiguration: Record<string, unknown> | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  tags: Record<string, string> | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
