@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState, useEffect } from 'react';
+import Link from 'next/link';
 import ReactFlow, {
   Node,
   Edge,
@@ -311,7 +312,7 @@ export default function FlowBuilder() {
   }, [stateMachineArn, loadExecutionHistory]);
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-950">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -320,36 +321,51 @@ export default function FlowBuilder() {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
-        className="bg-gray-50"
+        className="bg-gray-900"
       >
-        <Controls />
-        <MiniMap />
-        <Background gap={12} size={1} />
-        <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-4 m-4 max-w-xs">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Step Functions Builder</h2>
+        <Controls className="bg-gray-800 border-gray-700" />
+        <MiniMap 
+          className="bg-gray-800 border-gray-700"
+          maskColor="rgba(17, 24, 39, 0.8)"
+          nodeColor={(node) => {
+            if (node.selected) return '#6366f1'; // indigo-500
+            return '#374151'; // gray-700
+          }}
+        />
+        <Background gap={12} size={1} color="#374151" />
+        <Panel position="top-left" className="bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 p-4 m-4 max-w-xs">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Step Functions Builder</h2>
+            <Link
+              href="/dashboard"
+              className="text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            >
+              Dashboard →
+            </Link>
+          </div>
           <div className="flex flex-col gap-2">
             <button
               onClick={addPassState}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500 transition-colors text-sm shadow-lg shadow-green-500/20"
             >
               + Add Pass State
             </button>
             <button
               onClick={deleteSelectedNodes}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition-colors text-sm shadow-lg shadow-red-500/20"
             >
               Delete Selected
             </button>
             <button
               onClick={exportToASL}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm mt-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors text-sm mt-2 shadow-lg shadow-blue-500/20"
             >
               Export to ASL
             </button>
             <button
               onClick={deployToAWS}
               disabled={isDeploying}
-              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500 transition-colors text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20"
             >
               {isDeploying ? 'Deploying...' : 'Deploy to AWS'}
             </button>
@@ -357,13 +373,13 @@ export default function FlowBuilder() {
               <>
                 <button
                   onClick={() => setShowExecutionModal(true)}
-                  className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm mt-2"
+                  className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-500 transition-colors text-sm mt-2 shadow-lg shadow-orange-500/20"
                 >
                   Start Execution
                 </button>
                 <button
                   onClick={loadExecutionHistory}
-                  className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-sm"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors text-sm shadow-lg shadow-indigo-500/20"
                 >
                   View History
                 </button>
@@ -371,15 +387,15 @@ export default function FlowBuilder() {
             )}
           </div>
           {stateMachineArn && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-600 mb-2">Deployed State Machine:</p>
-              <code className="text-xs text-gray-800 break-all bg-gray-100 p-2 rounded block mb-2">
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <p className="text-xs text-gray-400 mb-2">Deployed State Machine:</p>
+              <code className="text-xs text-gray-300 break-all bg-gray-900/50 border border-gray-700 p-2 rounded block mb-2">
                 {stateMachineArn.split('/').pop()}
               </code>
               <button
                 onClick={deleteWorkflow}
                 disabled={isDeleting}
-                className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Workflow'}
               </button>
@@ -389,12 +405,12 @@ export default function FlowBuilder() {
         
         {/* Execution History Panel */}
         {stateMachineArn && executionHistory.length > 0 && (
-          <Panel position="top-right" className="bg-white rounded-lg shadow-lg p-4 m-4 max-w-sm max-h-[60vh] overflow-auto">
+          <Panel position="top-right" className="bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 p-4 m-4 max-w-sm max-h-[60vh] overflow-auto">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-bold text-gray-800">Execution History</h3>
+              <h3 className="text-lg font-bold text-white">Execution History</h3>
               <button
                 onClick={() => setExecutionHistory([])}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="text-xs text-gray-400 hover:text-white transition-colors"
               >
                 Clear
               </button>
@@ -403,22 +419,22 @@ export default function FlowBuilder() {
               {executionHistory.map((execution) => (
                 <div
                   key={execution.executionArn}
-                  className="p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50"
+                  className="p-2 border border-gray-700 rounded cursor-pointer hover:bg-gray-900/50 transition-colors"
                   onClick={() => viewExecutionDetails(execution.executionArn)}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-mono text-gray-600">
+                    <span className="text-xs font-mono text-gray-300">
                       {execution.name || execution.executionArn.split(':').pop()?.substring(0, 8)}
                     </span>
                     <span
                       className={`text-xs px-2 py-1 rounded ${
                         execution.status === 'SUCCEEDED'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-green-500/20 text-green-400'
                           : execution.status === 'FAILED'
-                          ? 'bg-red-100 text-red-700'
+                          ? 'bg-red-500/20 text-red-400'
                           : execution.status === 'RUNNING'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
                       {execution.status}
@@ -435,13 +451,13 @@ export default function FlowBuilder() {
 
         {/* Current Execution Status (if running) */}
         {currentExecution && currentExecution.status === 'RUNNING' && (
-          <Panel position="bottom-right" className="bg-blue-50 border border-blue-200 rounded-lg shadow-lg p-3 m-4">
+          <Panel position="bottom-right" className="bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-lg shadow-lg p-3 m-4">
             <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm text-blue-800">Execution running...</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+              <span className="text-sm text-blue-300">Execution running...</span>
               <button
                 onClick={() => viewExecutionDetails(currentExecution.executionArn)}
-                className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
+                className="text-xs text-blue-400 hover:text-blue-300 underline ml-2 transition-colors"
               >
                 View Details
               </button>
@@ -451,19 +467,19 @@ export default function FlowBuilder() {
       </ReactFlow>
 
       {showAsl && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl max-h-[80vh] overflow-auto m-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 p-6 max-w-2xl max-h-[80vh] overflow-auto m-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Amazon States Language (ASL) JSON</h3>
+              <h3 className="text-xl font-bold text-white">Amazon States Language (ASL) JSON</h3>
               <button
                 onClick={() => setShowAsl(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
               >
                 ×
               </button>
             </div>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm">
-              <code className='text-black'>{aslJson}</code>
+            <pre className="bg-gray-900/50 border border-gray-700 p-4 rounded overflow-auto text-sm">
+              <code className='text-gray-300'>{aslJson}</code>
             </pre>
             <div className="mt-4 flex gap-2">
               <button
@@ -471,13 +487,13 @@ export default function FlowBuilder() {
                   navigator.clipboard.writeText(aslJson);
                   alert('ASL JSON copied to clipboard!');
                 }}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20"
               >
                 Copy to Clipboard
               </button>
               <button
                 onClick={() => setShowAsl(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
               >
                 Close
               </button>
@@ -487,29 +503,29 @@ export default function FlowBuilder() {
       )}
 
       {deployResult && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md m-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 p-6 max-w-md m-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-xl font-bold ${deployResult.success ? 'text-green-600' : 'text-red-600'}`}>
+              <h3 className={`text-xl font-bold ${deployResult.success ? 'text-green-400' : 'text-red-400'}`}>
                 {deployResult.success ? '✓ Deployment Successful' : '✗ Deployment Failed'}
               </h3>
               <button
                 onClick={() => setDeployResult(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
               >
                 ×
               </button>
             </div>
-            <p className="text-gray-700 mb-4">{deployResult.message}</p>
+            <p className="text-gray-300 mb-4">{deployResult.message}</p>
             {deployResult.arn && (
-              <div className="bg-gray-100 p-3 rounded mb-4">
-                <p className="text-xs text-gray-600 mb-1">State Machine ARN:</p>
-                <code className="text-xs text-gray-800 break-all">{deployResult.arn}</code>
+              <div className="bg-gray-900/50 border border-gray-700 p-3 rounded mb-4">
+                <p className="text-xs text-gray-400 mb-1">State Machine ARN:</p>
+                <code className="text-xs text-gray-300 break-all">{deployResult.arn}</code>
               </div>
             )}
             <button
               onClick={() => setDeployResult(null)}
-              className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20"
             >
               Close
             </button>
@@ -519,25 +535,25 @@ export default function FlowBuilder() {
 
       {/* Start Execution Modal */}
       {showExecutionModal && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md m-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 p-6 max-w-md m-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Start Execution</h3>
+              <h3 className="text-xl font-bold text-white">Start Execution</h3>
               <button
                 onClick={() => setShowExecutionModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
               >
                 ×
               </button>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Input (JSON):
               </label>
               <textarea
                 value={executionInput}
                 onChange={(e) => setExecutionInput(e.target.value)}
-                className="w-full h-32 p-2 border border-gray-300 rounded font-mono text-sm"
+                className="w-full h-32 p-2 bg-gray-900/50 border border-gray-700 rounded font-mono text-sm text-white placeholder-gray-500"
                 placeholder='{"key": "value"}'
               />
             </div>
@@ -545,13 +561,13 @@ export default function FlowBuilder() {
               <button
                 onClick={startExecution}
                 disabled={isExecuting}
-                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-500 transition-colors disabled:opacity-50 shadow-lg shadow-orange-500/20"
               >
                 {isExecuting ? 'Starting...' : 'Start'}
               </button>
               <button
                 onClick={() => setShowExecutionModal(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
               >
                 Cancel
               </button>
@@ -562,16 +578,16 @@ export default function FlowBuilder() {
 
       {/* Execution Details Modal */}
       {showExecutionDetails && currentExecution && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-3xl max-h-[80vh] overflow-auto m-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 p-6 max-w-3xl max-h-[80vh] overflow-auto m-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Execution Details</h3>
+              <h3 className="text-xl font-bold text-white">Execution Details</h3>
               <button
                 onClick={() => {
                   setShowExecutionDetails(false);
                   setCurrentExecution(null);
                 }}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
               >
                 ×
               </button>
@@ -579,16 +595,16 @@ export default function FlowBuilder() {
             
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-700 mb-2">Status</h4>
+                <h4 className="font-semibold text-gray-300 mb-2">Status</h4>
                 <span
                   className={`inline-block px-3 py-1 rounded text-sm ${
                     currentExecution.status === 'SUCCEEDED'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-500/20 text-green-400'
                       : currentExecution.status === 'FAILED'
-                      ? 'bg-red-100 text-red-700'
+                      ? 'bg-red-500/20 text-red-400'
                       : currentExecution.status === 'RUNNING'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-700'
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : 'bg-gray-500/20 text-gray-400'
                   }`}
                 >
                   {currentExecution.status}
@@ -596,9 +612,9 @@ export default function FlowBuilder() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 mb-2">Input</h4>
-                <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
-                  <code className="text-black">
+                <h4 className="font-semibold text-gray-300 mb-2">Input</h4>
+                <pre className="bg-gray-900/50 border border-gray-700 p-3 rounded text-sm overflow-auto">
+                  <code className="text-gray-300">
                     {JSON.stringify(currentExecution.input, null, 2) as string}
                   </code>
                 </pre>
@@ -606,9 +622,9 @@ export default function FlowBuilder() {
 
               {currentExecution.output !== null && currentExecution.output !== undefined && (
                 <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Output</h4>
-                  <pre className="bg-gray-100 p-3 rounded text-sm overflow-auto">
-                    <code className="text-black">
+                  <h4 className="font-semibold text-gray-300 mb-2">Output</h4>
+                  <pre className="bg-gray-900/50 border border-gray-700 p-3 rounded text-sm overflow-auto">
+                    <code className="text-gray-300">
                       {JSON.stringify(currentExecution.output, null, 2) as string}
                     </code>
                   </pre>
@@ -617,15 +633,15 @@ export default function FlowBuilder() {
 
               {currentExecution.error && (
                 <div>
-                  <h4 className="font-semibold text-red-700 mb-2">Error</h4>
-                  <pre className="bg-red-50 p-3 rounded text-sm overflow-auto border border-red-200">
-                    <code className="text-red-800">
+                  <h4 className="font-semibold text-red-400 mb-2">Error</h4>
+                  <pre className="bg-red-500/10 border border-red-500/30 p-3 rounded text-sm overflow-auto">
+                    <code className="text-red-400">
                       {currentExecution.error}
                     </code>
                   </pre>
                   {currentExecution.cause && (
-                    <pre className="bg-red-50 p-3 rounded text-sm overflow-auto border border-red-200 mt-2">
-                      <code className="text-red-800">
+                    <pre className="bg-red-500/10 border border-red-500/30 p-3 rounded text-sm overflow-auto mt-2">
+                      <code className="text-red-400">
                         {currentExecution.cause}
                       </code>
                     </pre>
@@ -635,15 +651,15 @@ export default function FlowBuilder() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Start Date:</span>
-                  <p className="text-gray-800">
+                  <span className="text-gray-400">Start Date:</span>
+                  <p className="text-white">
                     {new Date(currentExecution.startDate).toLocaleString()}
                   </p>
                 </div>
                 {currentExecution.stopDate && (
                   <div>
-                    <span className="text-gray-600">Stop Date:</span>
-                    <p className="text-gray-800">
+                    <span className="text-gray-400">Stop Date:</span>
+                    <p className="text-white">
                       {new Date(currentExecution.stopDate).toLocaleString()}
                     </p>
                   </div>
@@ -651,8 +667,8 @@ export default function FlowBuilder() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 mb-2">Execution ARN</h4>
-                <code className="text-xs text-gray-600 bg-gray-100 p-2 rounded block break-all">
+                <h4 className="font-semibold text-gray-300 mb-2">Execution ARN</h4>
+                <code className="text-xs text-gray-400 bg-gray-900/50 border border-gray-700 p-2 rounded block break-all">
                   {currentExecution.executionArn}
                 </code>
               </div>
@@ -663,7 +679,7 @@ export default function FlowBuilder() {
                 setShowExecutionDetails(false);
                 setCurrentExecution(null);
               }}
-              className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20"
             >
               Close
             </button>
