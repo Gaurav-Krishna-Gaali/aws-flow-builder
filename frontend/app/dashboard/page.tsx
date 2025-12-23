@@ -86,38 +86,43 @@ export default function Dashboard() {
   const [workflowToExport, setWorkflowToExport] = useState<Workflow | null>(null);
   const [isStoppingExecution, setIsStoppingExecution] = useState<string | null>(null);
 
-  // Mock data for demonstration (replace with actual API call)
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      // In production, this would be: fetch(`${API_BASE_URL}/state-machines`)
-      // For now, using mock data
-      const mockWorkflows: Workflow[] = [
-        {
-          stateMachineArn: 'arn:aws:states:us-east-1:123456789012:stateMachine:OrderProcessing',
-          name: 'OrderProcessing',
-          status: 'ACTIVE',
-          creationDate: new Date('2024-01-15'),
-          type: 'STANDARD',
-        },
-        {
-          stateMachineArn: 'arn:aws:states:us-east-1:123456789012:stateMachine:DataPipeline',
-          name: 'DataPipeline',
-          status: 'ACTIVE',
-          creationDate: new Date('2024-01-20'),
-          type: 'STANDARD',
-        },
-        {
-          stateMachineArn: 'arn:aws:states:us-east-1:123456789012:stateMachine:NotificationService',
-          name: 'NotificationService',
-          status: 'ACTIVE',
-          creationDate: new Date('2024-02-01'),
-          type: 'EXPRESS',
-        },
-      ];
-      setWorkflows(mockWorkflows);
+  const loadWorkflows = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/state-machines`);
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        const workflows: Workflow[] = (result.stateMachines || []).map((sm: {
+          stateMachineArn: string | null;
+          name: string;
+          status: string;
+          creationDate: string | Date | null;
+          type: string;
+          definition: Record<string, unknown>;
+        }) => ({
+          stateMachineArn: sm.stateMachineArn || '',
+          name: sm.name,
+          status: sm.status,
+          creationDate: sm.creationDate ? new Date(sm.creationDate) : undefined,
+          type: sm.type,
+          definition: sm.definition,
+        }));
+        setWorkflows(workflows);
+      } else {
+        console.error('Failed to load workflows:', result);
+        setWorkflows([]);
+      }
+    } catch (error) {
+      console.error('Error loading workflows:', error);
+      setWorkflows([]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
+  };
+
+  useEffect(() => {
+    loadWorkflows();
   }, []);
 
   const filteredWorkflows = workflows.filter((workflow) => {
@@ -171,12 +176,16 @@ export default function Dashboard() {
         );
 
         if (response.ok) {
-          setWorkflows((prev) => prev.filter((w) => w.stateMachineArn !== workflowToDelete));
+          // Reload workflows from API
+          await loadWorkflows();
           setSelectedWorkflows((prev) => {
             const next = new Set(prev);
             next.delete(workflowToDelete);
             return next;
           });
+        } else {
+          const result = await response.json();
+          alert(result.error || result.details || 'Failed to delete workflow');
         }
       } else {
         // Bulk delete
@@ -185,9 +194,16 @@ export default function Dashboard() {
             method: 'DELETE',
           })
         );
-        await Promise.all(deletePromises);
-        setWorkflows((prev) => prev.filter((w) => !selectedWorkflows.has(w.stateMachineArn)));
-        setSelectedWorkflows(new Set());
+        const results = await Promise.all(deletePromises);
+        const allSuccessful = results.every((r) => r.ok);
+        
+        if (allSuccessful) {
+          // Reload workflows from API
+          await loadWorkflows();
+          setSelectedWorkflows(new Set());
+        } else {
+          alert('Some workflows failed to delete');
+        }
       }
     } catch (error) {
       console.error('Error deleting workflow:', error);
@@ -282,9 +298,24 @@ export default function Dashboard() {
     try {
       const response = await fetch(`${API_BASE_URL}/executions/${encodeURIComponent(executionArn)}`);
       const result = await response.json();
-      if (response.ok) {
-        setSelectedExecution(result);
+      if (response.ok && result.success) {
+        // Extract execution details from response
+        const executionDetails: ExecutionDetails = {
+          executionArn: result.executionArn,
+          name: result.name,
+          status: result.status,
+          startDate: result.startDate ? new Date(result.startDate) : new Date(),
+          stopDate: result.stopDate ? new Date(result.stopDate) : undefined,
+          stateMachineArn: result.stateMachineArn,
+          input: result.input,
+          output: result.output,
+          error: result.error,
+          cause: result.cause,
+        };
+        setSelectedExecution(executionDetails);
         setShowExecutionDetails(true);
+      } else {
+        console.error('Failed to load execution details:', result);
       }
     } catch (error) {
       console.error('Error loading execution details:', error);

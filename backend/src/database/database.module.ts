@@ -18,7 +18,9 @@ import { Execution } from '../state-machine/entities/execution.entity';
             type: 'postgres',
             url: databaseUrl,
             entities: [StateMachine, Execution],
-            synchronize: configService.get<string>('NODE_ENV') !== 'production',
+            migrations: ['dist/database/migrations/*.js'],
+            migrationsTableName: 'migrations',
+            synchronize: false, // Always false - use migrations instead
             logging: configService.get<string>('NODE_ENV') === 'development',
             ssl: databaseUrl.includes('sslmode=require')
               ? { rejectUnauthorized: false }
@@ -35,7 +37,9 @@ import { Execution } from '../state-machine/entities/execution.entity';
           password: configService.get<string>('DB_PASSWORD', 'postgres'),
           database: configService.get<string>('DB_NAME', 'flow_builder'),
           entities: [StateMachine, Execution],
-          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          migrations: ['dist/database/migrations/*.js'],
+          migrationsTableName: 'migrations',
+          synchronize: false, // Always false - use migrations instead
           logging: configService.get<string>('NODE_ENV') === 'development',
         };
       },

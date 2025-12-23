@@ -24,6 +24,17 @@ import { StartExecutionDto } from './dto/start-execution.dto';
 export class StateMachineController {
   constructor(private readonly stateMachineService: StateMachineService) {}
 
+  @Get('state-machines')
+  @ApiOperation({ summary: 'List all state machines' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of state machines retrieved successfully',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  listStateMachines() {
+    return this.stateMachineService.listStateMachines();
+  }
+
   @Post('state-machines')
   @ApiOperation({ summary: 'Create a new state machine' })
   @ApiBody({ type: CreateStateMachineDto })
