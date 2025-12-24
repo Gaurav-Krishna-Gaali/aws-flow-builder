@@ -6,6 +6,8 @@ import {
   Body,
   Query,
   Param,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,14 +17,43 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { StateMachineService } from './state-machine.service';
 import { CreateStateMachineDto } from './dto/create-state-machine.dto';
 import { StartExecutionDto } from './dto/start-execution.dto';
+import {
+  SFNClient,
+  StartExecutionCommand,
+  DescribeExecutionCommand,
+  DescribeExecutionCommandOutput,
+} from '@aws-sdk/client-sfn';
 
 @ApiTags('state-machines', 'executions')
 @Controller()
 export class StateMachineController {
-  constructor(private readonly stateMachineService: StateMachineService) {}
+  private readonly sfnClient: SFNClient;
+
+  constructor(
+    private readonly stateMachineService: StateMachineService,
+    private readonly configService: ConfigService,
+  ) {
+    const region = this.configService.get<string>('AWS_REGION') || 'us-east-1';
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.configService.get<string>(
+      'AWS_SECRET_ACCESS_KEY',
+    );
+
+    this.sfnClient = new SFNClient({
+      region,
+      credentials:
+        accessKeyId && secretAccessKey
+          ? {
+              accessKeyId,
+              secretAccessKey,
+            }
+          : undefined,
+    });
+  }
 
   @Get('state-machines')
   @ApiOperation({ summary: 'List all state machines' })
@@ -87,6 +118,132 @@ export class StateMachineController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   startExecution(@Body() body: StartExecutionDto) {
     return this.stateMachineService.startExecution(body);
+  }
+
+  @Post('executions/direct')
+  @ApiOperation({
+    summary: 'Start execution directly via AWS SDK (bypasses service layer)',
+  })
+  @ApiBody({ type: StartExecutionDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Raw AWS response',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - missing required fields',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async startExecutionDirect(@Body() body: StartExecutionDto): Promise<{
+    success: boolean;
+    rawResponse?: unknown;
+    executionArn?: string;
+    startDate?: Date;
+    status?: string;
+    stopDate?: Date;
+    input?: unknown;
+    output?: unknown;
+    error?: string;
+    cause?: string;
+    details?: unknown;
+  }> {
+    const { stateMachineArn, input, name } = body;
+    if (!stateMachineArn) {
+      throw new BadRequestException('Missing required field: stateMachineArn');
+    }
+
+    try {
+      // Step 1: Start execution
+      const startCommand = new StartExecutionCommand({
+        stateMachineArn,
+        input: input ? JSON.stringify(input) : '{}',
+        name,
+      });
+
+      const startResponse = await this.sfnClient.send(startCommand);
+
+      if (!startResponse.executionArn) {
+        throw new Error('Failed to get execution ARN from AWS');
+      }
+
+      // Step 2: Fetch execution details with retries to get the final status
+      // For fast-failing executions, AWS might need a moment to update the status
+      let describeResponse: DescribeExecutionCommandOutput | null = null;
+      const maxRetries = 5;
+      const retryDelay = 200; // 200ms between retries
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        }
+
+        const describeCommand = new DescribeExecutionCommand({
+          executionArn: startResponse.executionArn,
+        });
+
+        describeResponse = await this.sfnClient.send(describeCommand);
+
+        // If execution is in a final state, we have the final status
+        const finalStates = ['SUCCEEDED', 'FAILED', 'TIMED_OUT', 'ABORTED'];
+        if (
+          describeResponse.status &&
+          finalStates.includes(describeResponse.status)
+        ) {
+          break;
+        }
+
+        // If still running after a few attempts, return current status
+        if (attempt === maxRetries - 1) {
+          break;
+        }
+      }
+
+      if (!describeResponse) {
+        throw new Error('Failed to get execution details from AWS');
+      }
+
+      // Parse input/output if they exist
+      let parsedInput: unknown = null;
+      let parsedOutput: unknown = null;
+
+      if (describeResponse.input) {
+        try {
+          parsedInput = JSON.parse(describeResponse.input);
+        } catch {
+          parsedInput = describeResponse.input;
+        }
+      }
+
+      if (describeResponse.output) {
+        try {
+          parsedOutput = JSON.parse(describeResponse.output);
+        } catch {
+          parsedOutput = describeResponse.output;
+        }
+      }
+
+      // Return the raw AWS response with all fields from both commands
+      return {
+        success: true,
+        rawResponse: {
+          startExecution: startResponse,
+          describeExecution: describeResponse,
+        },
+        executionArn: startResponse.executionArn,
+        startDate: describeResponse.startDate,
+        status: describeResponse.status, // Use actual status from AWS
+        stopDate: describeResponse.stopDate,
+        input: parsedInput,
+        output: parsedOutput,
+        error: describeResponse.error,
+        cause: describeResponse.cause,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        error: 'Failed to start execution in AWS Step Functions',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   @Get('executions')

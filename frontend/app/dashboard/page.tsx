@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,9 +51,13 @@ interface Execution {
   executionArn: string;
   name?: string;
   status: string;
-  startDate: Date;
-  stopDate?: Date;
+  startDate: Date | string;
+  stopDate?: Date | string;
   stateMachineArn?: string;
+  input?: unknown;
+  output?: unknown;
+  error?: string;
+  cause?: string;
 }
 
 interface ExecutionDetails extends Execution {
@@ -215,17 +219,42 @@ export default function Dashboard() {
     }
   };
 
-  const loadExecutions = async (workflowArn: string) => {
+  const loadExecutions = useCallback(async (workflowArn: string) => {
     setIsLoadingExecutions((prev) => ({ ...prev, [workflowArn]: true }));
     try {
       const response = await fetch(
         `${API_BASE_URL}/executions?stateMachineArn=${encodeURIComponent(workflowArn)}&maxResults=10`
       );
       const result = await response.json();
-      if (response.ok) {
+      if (response.ok && result.success) {
+        // Transform the executions to ensure proper date handling
+        const transformedExecutions = (result.executions || []).map((exec: {
+          executionArn: string;
+          name?: string;
+          status: string;
+          startDate: string | Date;
+          stopDate?: string | Date;
+          stateMachineArn?: string;
+          input?: unknown;
+          output?: unknown;
+          error?: string;
+          cause?: string;
+        }) => ({
+          executionArn: exec.executionArn,
+          name: exec.name,
+          status: exec.status,
+          startDate: exec.startDate ? (typeof exec.startDate === 'string' ? new Date(exec.startDate) : exec.startDate) : new Date(),
+          stopDate: exec.stopDate ? (typeof exec.stopDate === 'string' ? new Date(exec.stopDate) : exec.stopDate) : undefined,
+          stateMachineArn: exec.stateMachineArn,
+          input: exec.input,
+          output: exec.output,
+          error: exec.error,
+          cause: exec.cause,
+        }));
+        
         setWorkflowExecutions((prev) => ({
           ...prev,
-          [workflowArn]: result.executions || [],
+          [workflowArn]: transformedExecutions,
         }));
       }
     } catch (error) {
@@ -233,7 +262,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingExecutions((prev) => ({ ...prev, [workflowArn]: false }));
     }
-  };
+  }, []);
 
   const toggleWorkflowExpansion = (arn: string) => {
     if (expandedWorkflow === arn) {
@@ -266,7 +295,8 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/executions`, {
+      // Call direct AWS API endpoint to see raw response (bypasses service layer)
+      const response = await fetch(`${API_BASE_URL}/executions/direct`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -276,9 +306,45 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      if (response.ok) {
-        // Reload executions
-        await loadExecutions(selectedWorkflowForExecution.stateMachineArn);
+      console.log('Direct AWS Response (raw):', result);
+      console.log('Status from AWS:', result.status);
+      console.log('Full rawResponse object:', result.rawResponse);
+      
+      if (response.ok && result.success && result.executionArn) {
+        // Use the actual status returned from AWS Step Functions
+        // If status is missing, check rawResponse
+        const actualStatus = result.status || 
+          (result.rawResponse?.describeExecution?.status) || 
+          'UNKNOWN';
+        
+        console.log('Using status:', actualStatus);
+        
+        const newExecution: Execution = {
+          executionArn: result.executionArn,
+          status: actualStatus, // Use actual status from AWS
+          startDate: result.startDate ? new Date(result.startDate) : new Date(),
+          stopDate: result.stopDate ? new Date(result.stopDate) : undefined,
+          stateMachineArn: selectedWorkflowForExecution.stateMachineArn,
+          input: result.input !== undefined ? result.input : input,
+          output: result.output,
+          error: result.error,
+          cause: result.cause,
+        };
+
+        // Add to execution list immediately
+        setWorkflowExecutions((prev) => {
+          const existing = prev[selectedWorkflowForExecution.stateMachineArn] || [];
+          // Check if execution already exists (avoid duplicates)
+          const exists = existing.some((e) => e.executionArn === result.executionArn);
+          if (!exists) {
+            return {
+              ...prev,
+              [selectedWorkflowForExecution.stateMachineArn]: [newExecution, ...existing],
+            };
+          }
+          return prev;
+        });
+
         setShowExecutionModal(false);
         setSelectedWorkflowForExecution(null);
         // Auto-expand to show new execution
@@ -321,6 +387,7 @@ export default function Dashboard() {
       console.error('Error loading execution details:', error);
     }
   };
+
 
   const handleExport = (workflow: Workflow) => {
     setWorkflowToExport(workflow);
@@ -705,6 +772,21 @@ export default function Dashboard() {
                                     </Button>
                                   </div>
                                 </div>
+                                {/* Show error details if execution failed */}
+                                {execution.status === 'FAILED' && (execution.error || execution.cause) && (
+                                  <div className="mt-2 pt-2 border-t border-white/10">
+                                    {execution.error && (
+                                      <div className="text-xs text-red-400 font-semibold mb-1">
+                                        Error: {execution.error}
+                                      </div>
+                                    )}
+                                    {execution.cause && (
+                                      <div className="text-xs text-red-300/80 font-mono break-words">
+                                        {execution.cause}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </CardContent>
                             </Card>
                           ))}

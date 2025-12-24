@@ -58,6 +58,11 @@ export default function FlowBuilder() {
     name?: string;
     status: string;
     startDate: Date;
+    stopDate?: Date;
+    input?: unknown;
+    output?: unknown;
+    error?: string;
+    cause?: string;
   }>>([]);
   const [showExecutionDetails, setShowExecutionDetails] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -250,34 +255,6 @@ export default function FlowBuilder() {
     }
   }, [stateMachineArn]);
 
-  const pollExecutionStatus = useCallback(async (executionArn: string) => {
-    const maxAttempts = 60; // Poll for up to 60 seconds
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/executions/${encodeURIComponent(executionArn)}`);
-        const result = await response.json();
-
-        if (response.ok) {
-          setCurrentExecution(result);
-          
-          // If execution is still running, continue polling
-          if (result.status === 'RUNNING' && attempts < maxAttempts) {
-            attempts++;
-            setTimeout(poll, 1000); // Poll every second
-          } else {
-            // Execution finished or failed, refresh history
-            loadExecutionHistory();
-          }
-        }
-      } catch (error) {
-        console.error('Error polling execution:', error);
-      }
-    };
-
-    poll();
-  }, [loadExecutionHistory]);
 
   const startExecution = useCallback(async () => {
     if (!stateMachineArn) {
@@ -297,7 +274,8 @@ export default function FlowBuilder() {
     setCurrentExecution(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/executions`, {
+      // Use direct endpoint to get rich response data
+      const response = await fetch(`${API_BASE_URL}/executions/direct`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -310,19 +288,44 @@ export default function FlowBuilder() {
 
       const result = await response.json();
 
-      if (response.ok) {
-        // Start polling for execution status
-        pollExecutionStatus(result.executionArn);
+      if (response.ok && result.success && result.executionArn) {
+        // Use the actual status returned from AWS Step Functions
+        const actualStatus = result.status || 
+          (result.rawResponse?.describeExecution?.status) || 
+          'UNKNOWN';
+        
+        // Create execution object from rich response data
+        const newExecution = {
+          executionArn: result.executionArn,
+          status: actualStatus,
+          startDate: result.startDate ? new Date(result.startDate) : new Date(),
+          stopDate: result.stopDate ? new Date(result.stopDate) : undefined,
+          input: result.input !== undefined ? result.input : input,
+          output: result.output,
+          error: result.error,
+          cause: result.cause,
+        };
+
+        // Add to execution history directly using the rich response data
+        setExecutionHistory((prev) => {
+          // Check if execution already exists (avoid duplicates)
+          const exists = prev.some((e) => e.executionArn === result.executionArn);
+          if (!exists) {
+            return [newExecution, ...prev];
+          }
+          return prev;
+        });
+
         setShowExecutionModal(false);
       } else {
-        alert(`Failed to start execution: ${result.error || result.details}`);
+        alert(`Failed to start execution: ${result.error || result.details || 'Unknown error'}`);
       }
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : 'Network error occurred'}`);
     } finally {
       setIsExecuting(false);
     }
-  }, [stateMachineArn, executionInput, pollExecutionStatus]);
+  }, [stateMachineArn, executionInput]);
 
   const viewExecutionDetails = useCallback(async (executionArn: string) => {
     try {
@@ -529,27 +532,27 @@ export default function FlowBuilder() {
                   <div className="text-xs text-gray-500 mt-1">
                     {new Date(execution.startDate).toLocaleString()}
                   </div>
+                  {/* Show error details if execution failed */}
+                  {execution.status === 'FAILED' && (execution.error || execution.cause) && (
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      {execution.error && (
+                        <div className="text-xs text-red-400 font-semibold mb-1">
+                          Error: {execution.error}
+                        </div>
+                      )}
+                      {execution.cause && (
+                        <div className="text-xs text-red-300/80 font-mono break-words">
+                          {execution.cause}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </Panel>
         )}
 
-        {/* Current Execution Status (if running) */}
-        {currentExecution && currentExecution.status === 'RUNNING' && (
-          <Panel position="bottom-right" className="bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-lg shadow-lg p-3 m-4">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-              <span className="text-sm text-blue-300">Execution running...</span>
-              <button
-                onClick={() => viewExecutionDetails(currentExecution.executionArn)}
-                className="text-xs text-blue-400 hover:text-blue-300 underline ml-2 transition-colors"
-              >
-                View Details
-              </button>
-            </div>
-          </Panel>
-        )}
       </ReactFlow>
 
       {showAsl && (

@@ -244,6 +244,11 @@ export class StateMachineService {
           status: exec.status,
           startDate: exec.awsStartDate,
           stopDate: exec.awsStopDate,
+          stateMachineArn: exec.awsStateMachineArn,
+          input: exec.input,
+          output: exec.output,
+          error: exec.error,
+          cause: exec.cause,
         })),
       };
     } catch (error) {
@@ -388,10 +393,15 @@ export class StateMachineService {
       // Still return success since AWS operation succeeded
     }
 
+    // Return full execution details for immediate display
     return {
       success: true,
       executionArn: awsResponse.executionArn,
+      name: name || null,
+      status: 'RUNNING',
       startDate: awsResponse.startDate,
+      stateMachineArn: stateMachineArn,
+      input: input || null,
       message: 'Execution started successfully!',
     };
   }
