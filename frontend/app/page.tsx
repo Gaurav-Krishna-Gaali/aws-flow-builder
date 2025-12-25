@@ -247,8 +247,64 @@ export default function FlowBuilder() {
       const response = await fetch(`${API_BASE_URL}/executions?stateMachineArn=${encodeURIComponent(stateMachineArn)}&maxResults=10`);
       const result = await response.json();
 
-      if (response.ok) {
-        setExecutionHistory(result.executions || []);
+      if (response.ok && result.success) {
+        // Merge API executions with local state to preserve manually added executions
+        setExecutionHistory((prev) => {
+          const apiExecutions = (result.executions || []).map((exec: {
+            executionArn: string;
+            name?: string;
+            status: string;
+            startDate: string | Date;
+            stopDate?: string | Date;
+            input?: unknown;
+            output?: unknown;
+            error?: string;
+            cause?: string;
+          }) => ({
+            executionArn: exec.executionArn,
+            name: exec.name,
+            status: exec.status,
+            startDate: exec.startDate ? (typeof exec.startDate === 'string' ? new Date(exec.startDate) : exec.startDate) : new Date(),
+            stopDate: exec.stopDate ? (typeof exec.stopDate === 'string' ? new Date(exec.stopDate) : exec.stopDate) : undefined,
+            input: exec.input,
+            output: exec.output,
+            error: exec.error,
+            cause: exec.cause,
+          }));
+
+          // Create a map of existing executions by ARN
+          const executionMap = new Map<string, typeof apiExecutions[0]>();
+          
+          // First, add all API executions (they have the latest data)
+          apiExecutions.forEach(exec => {
+            executionMap.set(exec.executionArn, exec);
+          });
+          
+          // Then, add any local executions that aren't in the API response yet
+          prev.forEach(exec => {
+            if (!executionMap.has(exec.executionArn)) {
+              executionMap.set(exec.executionArn, exec);
+            }
+          });
+          
+          // Convert back to array and sort by startDate (newest first)
+          const merged = Array.from(executionMap.values()).sort((a, b) => 
+            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          );
+          
+          console.log('Merged execution history:', merged.length, 'executions');
+          
+          // Save to localStorage
+          if (typeof window !== 'undefined' && stateMachineArn) {
+            try {
+              localStorage.setItem(`executionHistory_${stateMachineArn}`, JSON.stringify(merged));
+            } catch (e) {
+              console.error('Failed to save execution history to localStorage:', e);
+            }
+          }
+          
+          return merged;
+        });
       }
     } catch (error) {
       console.error('Error loading execution history:', error);
@@ -306,13 +362,26 @@ export default function FlowBuilder() {
           cause: result.cause,
         };
 
+        console.log('Adding new execution to history:', newExecution);
+
         // Add to execution history directly using the rich response data
         setExecutionHistory((prev) => {
           // Check if execution already exists (avoid duplicates)
           const exists = prev.some((e) => e.executionArn === result.executionArn);
           if (!exists) {
-            return [newExecution, ...prev];
+            const updated = [newExecution, ...prev];
+            console.log('Updated execution history, new length:', updated.length);
+            // Save to localStorage
+            if (typeof window !== 'undefined' && stateMachineArn) {
+              try {
+                localStorage.setItem(`executionHistory_${stateMachineArn}`, JSON.stringify(updated));
+              } catch (e) {
+                console.error('Failed to save execution history to localStorage:', e);
+              }
+            }
+            return updated;
           }
+          console.log('Execution already exists in history, skipping');
           return prev;
         });
 
@@ -387,6 +456,24 @@ export default function FlowBuilder() {
   // Load execution history when state machine is deployed
   useEffect(() => {
     if (stateMachineArn) {
+      // First, try to load from localStorage
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem(`executionHistory_${stateMachineArn}`);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            const restored = parsed.map((exec: any) => ({
+              ...exec,
+              startDate: new Date(exec.startDate),
+              stopDate: exec.stopDate ? new Date(exec.stopDate) : undefined,
+            }));
+            setExecutionHistory(restored);
+          } catch (e) {
+            console.error('Failed to load execution history from localStorage:', e);
+          }
+        }
+      }
+      // Then load from API
       loadExecutionHistory();
       // Refresh history every 5 seconds
       const interval = setInterval(loadExecutionHistory, 5000);
@@ -467,7 +554,27 @@ export default function FlowBuilder() {
                   Start Execution
                 </button>
                 <button
-                  onClick={loadExecutionHistory}
+                  onClick={() => {
+                    // First try to load from localStorage, then refresh from API
+                    if (typeof window !== 'undefined' && stateMachineArn) {
+                      const saved = localStorage.getItem(`executionHistory_${stateMachineArn}`);
+                      if (saved) {
+                        try {
+                          const parsed = JSON.parse(saved);
+                          const restored = parsed.map((exec: any) => ({
+                            ...exec,
+                            startDate: new Date(exec.startDate),
+                            stopDate: exec.stopDate ? new Date(exec.stopDate) : undefined,
+                          }));
+                          setExecutionHistory(restored);
+                        } catch (e) {
+                          console.error('Failed to load execution history from localStorage:', e);
+                        }
+                      }
+                    }
+                    // Then refresh from API to get latest status
+                    loadExecutionHistory();
+                  }}
                   className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors text-sm shadow-lg shadow-indigo-500/20"
                 >
                   View History
@@ -498,7 +605,13 @@ export default function FlowBuilder() {
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-bold text-white">Execution History</h3>
               <button
-                onClick={() => setExecutionHistory([])}
+                onClick={() => {
+                  setExecutionHistory([]);
+                  // Clear from localStorage too
+                  if (typeof window !== 'undefined' && stateMachineArn) {
+                    localStorage.removeItem(`executionHistory_${stateMachineArn}`);
+                  }
+                }}
                 className="text-xs text-gray-400 hover:text-white transition-colors"
               >
                 Clear
